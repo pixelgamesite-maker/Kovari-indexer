@@ -1,52 +1,48 @@
 import { createConfig, factory } from "ponder";
 import { http, parseAbiItem } from "viem";
 
-// NOTE: Ponder's config API shifts between versions (networks/network vs
-// chains/chain naming has changed across releases). If `ponder dev` throws a
-// type error on this file, check https://ponder.sh/docs/config/contracts
-// against whatever version `npm install` actually pulled in.
-
-// TODO: replace with the real Factory contract ABI once the contract dev
-// delivers it. Only the ABI fragment needed to extract child addresses is
-// required here - factory() just needs to find the event that announces a
-// new collection clone.
 import { FactoryAbi } from "./abis/Factory";
 import { CollectionAbi } from "./abis/Collection";
 
-const FACTORY_ADDRESS = "0x0000000000000000000000000000000000000000"; // TODO
-const FACTORY_START_BLOCK = 0; // TODO: block the factory was actually deployed at
+// Sepolia v3 — confirmed against Blockscout
+// "0x89e9..." is labeled Factory, "0x7131..." is the Collection implementation
+const FACTORY_ADDRESS = "0x89e9D5d21Ba5ef773702dDA42269064510324A30" as const;
+
+// Block the Factory was deployed on Sepolia.
+// TODO: look this up on Sepolia Etherscan/Blockscout and set the real value —
+// starting from 0 works but wastes time scanning thousands of empty blocks.
+// Find it: https://sepolia.etherscan.io/address/0x89e9D5d21Ba5ef773702dDA42269064510324A30
+const FACTORY_START_BLOCK = 0;
 
 export default createConfig({
   chains: {
-    mainnet: {
-      id: 1,
-      rpc: http(process.env.PONDER_RPC_URL_1),
+    // Sepolia testnet — the only deployed chain right now (brief §2)
+    sepolia: {
+      id: 11155111,
+      rpc: http(process.env.PONDER_RPC_URL_11155111),
     },
-    base: {
-      id: 8453,
-      rpc: http(process.env.PONDER_RPC_URL_8453),
-    },
+    // Mainnet + Base ready for when contracts deploy there
+    // mainnet: { id: 1, rpc: http(process.env.PONDER_RPC_URL_1) },
+    // base:    { id: 8453, rpc: http(process.env.PONDER_RPC_URL_8453) },
   },
   contracts: {
-    // The factory itself - lets us catch the CollectionCreated event and run
-    // setup logic (inserting the new row into `collections`).
+    // The factory — catches CollectionCreated to bootstrap each collection row
     Factory: {
       abi: FactoryAbi,
-      chain: "base", // TODO: add a second entry here (or array) once you support launches on both chains
+      chain: "sepolia",
       address: FACTORY_ADDRESS,
       startBlock: FACTORY_START_BLOCK,
     },
-    // Every collection deployed *by* the factory. Ponder watches for the
-    // factory's announcement event and automatically starts indexing each
-    // child contract's own events (Minted, Transfer, TradingLockChanged, etc).
+    // Every collection clone deployed by the factory.
+    // Ponder watches CollectionCreated and auto-starts indexing each child.
     Collection: {
       abi: CollectionAbi,
-      chain: "base",
+      chain: "sepolia",
       address: factory({
         address: FACTORY_ADDRESS,
-        // TODO: confirm exact event name/signature with the contract dev
+        // Real event signature from the ABI — includes name + symbol args
         event: parseAbiItem(
-          "event CollectionCreated(address indexed collection, address indexed creator)"
+          "event CollectionCreated(address indexed collection, address indexed creator, string name, string symbol)"
         ),
         parameter: "collection",
       }),
