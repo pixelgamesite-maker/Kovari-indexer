@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "ponder": "latest",
-    "viem": "^2.21.0"
+    "viem": "^2.21.0",
+    "hono": "latest"
   },
   "devDependencies": {
     "typescript": "^5.5.0",
