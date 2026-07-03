@@ -7,25 +7,18 @@ ponder.on("Factory:CollectionCreated", async ({ event, context }) => {
   const address = event.args.collection;
   const client  = context.client;
 
-  // Read on-chain state at the block this event landed in
-  const [maxSupply, symbol] = await Promise.all([
-    client.readContract({
-      abi:          context.contracts.Collection.abi,
-      address,
-      functionName: "maxSupply",
-    }),
-    client.readContract({
-      abi:          context.contracts.Collection.abi,
-      address,
-      functionName: "symbol",
-    }),
-  ]);
+  // symbol comes directly from event.args — no extra RPC call needed
+  const maxSupply = await client.readContract({
+    abi:          context.contracts.Collection.abi,
+    address,
+    functionName: "maxSupply",
+  });
 
   await context.db.insert(collections).values({
     id:            address,
     creator:       event.args.creator,
     name:          event.args.name,
-    symbol:        symbol as string,
+    symbol:        event.args.symbol,
     chainId:       context.chain.id,
     maxSupply:     maxSupply as bigint,
     totalMinted:   0,
