@@ -10,6 +10,9 @@ const FACTORY_ADDRESS = "0x89e9D5d21Ba5ef773702dDA42269064510324A30" as const;
 const FACTORY_START_BLOCK = 7000000;
 
 export default createConfig({
+  server: {
+    port: Number(process.env.PORT ?? 42069),
+  },
   chains: {
     sepolia: {
       id: 11155111,
