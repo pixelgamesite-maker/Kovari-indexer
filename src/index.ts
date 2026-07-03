@@ -1,5 +1,5 @@
 import { ponder } from "ponder:registry";
-import { collections, phases, mints, transfers } from "ponder:schema";
+import { collection, phase, mint, transfer } from "ponder:schema";
 
 // ── Factory events ────────────────────────────────────────────────────────────
 
@@ -14,7 +14,7 @@ ponder.on("Factory:CollectionCreated", async ({ event, context }) => {
     functionName: "maxSupply",
   });
 
-  await context.db.insert(collections).values({
+  await context.db.insert(collection).values({
     id:            address,
     creator:       event.args.creator,
     name:          event.args.name,
@@ -54,7 +54,7 @@ ponder.on("Collection:PhaseAdded", async ({ event, context }) => {
     active: boolean;
   };
 
-  await context.db.insert(phases).values({
+  await context.db.insert(phase).values({
     id:           `${collectionId}-${phaseId}`,
     collectionId,
     phaseId,
@@ -73,7 +73,7 @@ ponder.on("Collection:PhaseAdded", async ({ event, context }) => {
 
   // Increment denormalised phase count on the collection
   await context.db
-    .update(collections, { id: collectionId })
+    .update(collection, { id: collectionId })
     .set((row) => ({ phaseCount: row.phaseCount + 1 }));
 });
 
@@ -101,7 +101,7 @@ ponder.on("Collection:PhaseUpdated", async ({ event, context }) => {
   };
 
   await context.db
-    .update(phases, { id: `${collectionId}-${phaseId}` })
+    .update(phase, { id: `${collectionId}-${phaseId}` })
     .set({
       name:         phase.name,
       price:        phase.price,
@@ -136,17 +136,17 @@ ponder.on("Collection:Minted", async ({ event, context }) => {
   }));
 
   for (const row of mintRows) {
-    await context.db.insert(mints).values(row);
+    await context.db.insert(mint).values(row);
   }
 
   // Update phase mintedCount
   await context.db
-    .update(phases, { id: `${collectionId}-${phaseIdNum}` })
+    .update(phase, { id: `${collectionId}-${phaseIdNum}` })
     .set((row) => ({ mintedCount: row.mintedCount + qty }));
 
   // Update collection totalMinted
   await context.db
-    .update(collections, { id: collectionId })
+    .update(collection, { id: collectionId })
     .set((row) => ({ totalMinted: row.totalMinted + qty }));
 });
 
@@ -156,7 +156,7 @@ ponder.on("Collection:Transfer", async ({ event, context }) => {
   const ZERO = "0x0000000000000000000000000000000000000000";
   if (event.args.from.toLowerCase() === ZERO) return;
 
-  await context.db.insert(transfers).values({
+  await context.db.insert(transfer).values({
     id:           `${event.transaction.hash}-${event.log.logIndex}`,
     collectionId: event.log.address,
     tokenId:      event.args.tokenId,
@@ -170,7 +170,7 @@ ponder.on("Collection:Transfer", async ({ event, context }) => {
 // TradingLockChanged — creator called lockTrading() or unlockTrading()
 ponder.on("Collection:TradingLockChanged", async ({ event, context }) => {
   await context.db
-    .update(collections, { id: event.log.address })
+    .update(collection, { id: event.log.address })
     .set({ tradingLocked: event.args.locked });
 });
 
@@ -185,6 +185,6 @@ ponder.on("Collection:Revealed", async ({ event, context }) => {
   }) as string;
 
   await context.db
-    .update(collections, { id: collectionId })
+    .update(collection, { id: collectionId })
     .set({ revealed: true, baseURI });
 });
