@@ -11,7 +11,8 @@ const FACTORY_START_BLOCK = 7000000;
 
 export default createConfig({
   server: {
-    port: Number(process.env.PORT ?? 42069),
+    port: Number(process.env.PORT ?? 8080),
+    host: "0.0.0.0",
   },
   chains: {
     sepolia: {
