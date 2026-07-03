@@ -1,7 +1,7 @@
 import { onchainTable, index } from "ponder";
 
-export const collections = onchainTable(
-  "collections",
+export const collection = onchainTable(
+  "collection",
   (t) => ({
     id: t.hex().primaryKey(),
     creator: t.hex().notNull(),
@@ -21,10 +21,10 @@ export const collections = onchainTable(
   })
 );
 
-export const phases = onchainTable(
-  "phases",
+export const phase = onchainTable(
+  "phase",
   (t) => ({
-    id: t.text().primaryKey(), // `${collectionId}-${phaseId}`
+    id: t.text().primaryKey(),
     collectionId: t.hex().notNull(),
     phaseId: t.integer().notNull(),
     name: t.text().notNull(),
@@ -42,8 +42,8 @@ export const phases = onchainTable(
   })
 );
 
-export const mints = onchainTable(
-  "mints",
+export const mint = onchainTable(
+  "mint",
   (t) => ({
     id: t.text().primaryKey(),
     collectionId: t.hex().notNull(),
@@ -59,8 +59,8 @@ export const mints = onchainTable(
   })
 );
 
-export const transfers = onchainTable(
-  "transfers",
+export const transfer = onchainTable(
+  "transfer",
   (t) => ({
     id: t.text().primaryKey(),
     collectionId: t.hex().notNull(),
