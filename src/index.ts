@@ -38,7 +38,7 @@ ponder.on("Collection:PhaseAdded", async ({ event, context }) => {
   const phaseId      = Number(event.args.phaseId);
   const client       = context.client;
 
-  const phase = await client.readContract({
+  const phaseData = await client.readContract({
     abi:          context.contracts.Collection.abi,
     address:      collectionId,
     functionName: "getPhase",
@@ -58,33 +58,30 @@ ponder.on("Collection:PhaseAdded", async ({ event, context }) => {
     id:           `${collectionId}-${phaseId}`,
     collectionId,
     phaseId,
-    name:         phase.name,
-    price:        phase.price,
-    startTime:    phase.startTime,
-    endTime:      phase.endTime,
-    maxPerWallet: phase.maxPerWallet,
-    maxSupply:    phase.maxSupply,
-    merkleRoot:   phase.merkleRoot === "0x0000000000000000000000000000000000000000000000000000000000000000"
+    name:         phaseData.name,
+    price:        phaseData.price,
+    startTime:    phaseData.startTime,
+    endTime:      phaseData.endTime,
+    maxPerWallet: phaseData.maxPerWallet,
+    maxSupply:    phaseData.maxSupply,
+    merkleRoot:   phaseData.merkleRoot === "0x0000000000000000000000000000000000000000000000000000000000000000"
                     ? null
-                    : phase.merkleRoot,
-    active:       phase.active,
+                    : phaseData.merkleRoot,
+    active:       phaseData.active,
     mintedCount:  0,
   });
 
-  // Increment denormalised phase count on the collection
   await context.db
     .update(collection, { id: collectionId })
     .set((row) => ({ phaseCount: row.phaseCount + 1 }));
 });
 
-// PhaseUpdated — creator called setPhase() / setPhaseActive() / setPhasePrice().
-// Re-read and overwrite phase row.
 ponder.on("Collection:PhaseUpdated", async ({ event, context }) => {
   const collectionId = event.log.address;
   const phaseId      = Number(event.args.phaseId);
   const client       = context.client;
 
-  const phase = await client.readContract({
+  const phaseData = await client.readContract({
     abi:          context.contracts.Collection.abi,
     address:      collectionId,
     functionName: "getPhase",
@@ -103,16 +100,16 @@ ponder.on("Collection:PhaseUpdated", async ({ event, context }) => {
   await context.db
     .update(phase, { id: `${collectionId}-${phaseId}` })
     .set({
-      name:         phase.name,
-      price:        phase.price,
-      startTime:    phase.startTime,
-      endTime:      phase.endTime,
-      maxPerWallet: phase.maxPerWallet,
-      maxSupply:    phase.maxSupply,
-      merkleRoot:   phase.merkleRoot === "0x0000000000000000000000000000000000000000000000000000000000000000"
+      name:         phaseData.name,
+      price:        phaseData.price,
+      startTime:    phaseData.startTime,
+      endTime:      phaseData.endTime,
+      maxPerWallet: phaseData.maxPerWallet,
+      maxSupply:    phaseData.maxSupply,
+      merkleRoot:   phaseData.merkleRoot === "0x0000000000000000000000000000000000000000000000000000000000000000"
                       ? null
-                      : phase.merkleRoot,
-      active:       phase.active,
+                      : phaseData.merkleRoot,
+      active:       phaseData.active,
     });
 });
 
